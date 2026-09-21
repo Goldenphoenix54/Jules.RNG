@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jules RNG - Sol's RNG Roblox Edition</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tone.js for Sound Effects -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            rajdhani: ['Rajdhani', 'sans-serif'],
+          },
+          animation: {
+            'pulse-fast': 'pulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 12s linear infinite',
+            'glow-pulse': 'glowPulse 2s infinite alternate',
+          },
+          keyframes: {
+            glowPulse: {
+              '0%': { filter: 'drop-shadow(0 0 15px currentColor)' },
+              '100%': { filter: 'drop-shadow(0 0 35px currentColor)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background-color: #070913;
+      color: #f3f4f6;
+      overflow-x: hidden;
+      user-select: none;
+    }
+    
+    .font-title {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Custom Glassmorphism */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-button {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.2s ease-in-out;
+    }
+    .glass-button:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    .glass-button:active {
+      transform: translateY(1px);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.5);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(129, 140, 248, 0.8);
+    }
+
+    /* Aura glow effects */
+    .aura-glow {
+      box-shadow: 0 0 50px -10px var(--aura-color, #6366f1);
+    }
+
+    .text-glow {
+      text-shadow: 0 0 15px var(--aura-color, #6366f1);
+    }
+
+    /* Roll animation shaking */
+    .shake {
+      animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+
+    .shake-extreme {
+      animation: shakeExtreme 0.6s infinite;
+    }
+    @keyframes shakeExtreme {
+      0% { transform: translate(2px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+    /* --- Lecteur Phonk --- */
+    .phonk-body {
+      max-height: 600px;
+      opacity: 1;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
+    }
+    .phonk-body.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      pointer-events: none;
+    }
+    #phonkVideo iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200px;
+      height: 200px;
+      border: 0;
+    }
+    .eq span {
+      display: block;
+      width: 3px;
+      height: 25%;
+      background: currentColor;
+      border-radius: 1px;
+    }
+    .eq.playing span {
+      animation: eqBar 0.9s ease-in-out infinite;
+    }
+    .eq.playing span:nth-child(2) { animation-delay: 0.2s; }
+    .eq.playing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes eqBar {
+      0%, 100% { height: 25%; }
+      50% { height: 100%; }
+    }
+
+    /* --- Reveal animations: one distinct entrance per Jules, played only on first unlock --- */
+    .reveal-anim-fade    { animation: revFade .8s ease; }
+    @keyframes revFade    { 0%{opacity:0; transform:scale(.5);} 100%{opacity:1; transform:scale(1);} }
+
+    .reveal-anim-drop     { animation: revDrop .9s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes revDrop     { 0%{transform:translateY(-260px) rotate(-20deg); opacity:0;} 65%{transform:translateY(18px) rotate(5deg); opacity:1;} 100%{transform:translateY(0) rotate(0);} }
+
+    .reveal-anim-shake    { animation: revShake .7s ease; }
+    @keyframes revShake    { 0%{transform:scale(.3); opacity:0;} 40%{transform:scale(1.15) rotate(8deg); opacity:1;} 55%{transform:scale(.95) rotate(-8deg);} 70%{transform:scale(1.05) rotate(4deg);} 100%{transform:scale(1) rotate(0);} }
+
+    .reveal-anim-wobble   { animation: revWobble .9s ease; }
+    @keyframes revWobble   { 0%{transform:scale(0) rotate(0); opacity:0;} 55%{transform:scale(1.2) rotate(200deg); opacity:1;} 80%{transform:scale(.9) rotate(280deg);} 100%{transform:scale(1) rotate(360deg);} }
+
+    .reveal-anim-bounce   { animation: revBounce 1s cubic-bezier(.28,1.65,.55,1); }
+    @keyframes revBounce   { 0%{transform:scale(0) translateY(0); opacity:0;} 40%{transform:scale(1.1) translateY(-40px); opacity:1;} 60%{transform:scale(.95) translateY(0);} 80%{transform:scale(1.05) translateY(-14px);} 100%{transform:scale(1) translateY(0);} }
+
+    .reveal-anim-sparkle  { animation: revSparkle 1s ease; }
+    @keyframes revSparkle  { 0%{filter:brightness(3) saturate(0); transform:scale(.6); opacity:0;} 50%{filter:brightness(2) saturate(2); transform:scale(1.15); opacity:1;} 100%{filter:brightness(1) saturate(1); transform:scale(1);} }
+
+    .reveal-anim-flip     { animation: revFlip .9s ease; }
+    @keyframes revFlip     { 0%{transform:perspective(600px) rotateY(180deg) scale(.5); opacity:0;} 100%{transform:perspective(600px) rotateY(0) scale(1); opacity:1;} }
+
+    .reveal-anim-glitch   { animation: revGlitch .8s steps(2,end); }
+    @keyframes revGlitch   { 0%{transform:translate(-10px,0) scale(.9); opacity:0; filter:hue-rotate(0deg);} 25%{transform:translate(8px,-4px) scale(1.05); filter:hue-rotate(90deg);} 50%{transform:translate(-6px,4px) scale(.95); filter:hue-rotate(180deg); opacity:1;} 75%{transform:translate(4px,-2px) scale(1.02); filter:hue-rotate(270deg);} 100%{transform:translate(0,0) scale(1); filter:hue-rotate(360deg);} }
+
+    .reveal-anim-cube     { animation: revCube .9s ease; }
+    @keyframes revCube     { 0%{transform:perspective(600px) rotateX(-90deg) scale(.7); opacity:0;} 60%{transform:perspective(600px) rotateX(20deg) scale(1.05); opacity:1;} 100%{transform:perspective(600px) rotateX(0) scale(1);} }
+
+    .reveal-anim-slide    { animation: revSlide .8s cubic-bezier(.2,.8,.2,1); }
+    @keyframes revSlide    { 0%{transform:translateX(-260px) rotate(-15deg); opacity:0;} 100%{transform:translateX(0) rotate(0); opacity:1;} }
+
+    .reveal-anim-shine    { animation: revShine 1.1s ease; }
+    @keyframes revShine    { 0%{transform:scale(.4) rotate(0); opacity:0; filter:brightness(1);} 50%{transform:scale(1.2) rotate(180deg); filter:brightness(2.5); opacity:1;} 100%{transform:scale(1) rotate(360deg); filter:brightness(1);} }
+
+    .reveal-anim-orbit    { animation: revOrbit 1.2s ease; }
+    @keyframes revOrbit    { 0%{transform:scale(0) rotate(-360deg) translateY(-60px); opacity:0;} 60%{transform:scale(1.1) rotate(20deg) translateY(10px); opacity:1;} 100%{transform:scale(1) rotate(0) translateY(0);} }
+
+    .reveal-anim-corrupt  { animation: revCorrupt .9s steps(4,end); }
+    @keyframes revCorrupt  { 0%{opacity:0; transform:scale(.5) skew(10deg,5deg); filter:invert(1) hue-rotate(0deg);} 30%{opacity:1; transform:scale(1.1) skew(-8deg,-4deg); filter:invert(0) hue-rotate(120deg);} 65%{transform:scale(.95) skew(4deg,2deg); filter:hue-rotate(240deg);} 100%{transform:scale(1) skew(0,0); filter:hue-rotate(360deg) invert(0);} }
+
+    .reveal-anim-divine   { animation: revDivine 1.3s ease; }
+    @keyframes revDivine   { 0%{transform:scale(0) rotate(0); opacity:0; filter:brightness(4) blur(8px);} 40%{transform:scale(1.3) rotate(180deg); opacity:1; filter:brightness(2.5) blur(2px);} 70%{transform:scale(.9) rotate(300deg); filter:brightness(1.5) blur(0);} 100%{transform:scale(1) rotate(360deg); filter:brightness(1) blur(0);} }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative overflow-x-hidden select-none">
+
+  <!-- Dynamic Canvas Background for Auras -->
+  <canvas id="auraCanvas" class="fixed inset-0 pointer-events-none z-0 w-full h-full"></canvas>
+
+  <!-- Buddy face cutouts: sit in the background, left & right, and pulse with the phonk beat (like a video edit) -->
+  <img id="buddyFaceLeft" src="data:image/jpeg;base64,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" alt=""
+       class="hidden sm:block fixed left-2 md:left-6 lg:left-10 top-1/2 -translate-y-1/2 w-36 h-36 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full border-4 border-white/10 shadow-[0_0_60px_rgba(99,102,241,0.4)] opacity-60 pointer-events-none select-none z-0"
+       style="will-change: transform, opacity;">
+  <img id="buddyFaceRight" src="data:image/jpeg;base64,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" alt=""
+       class="hidden sm:block fixed right-2 md:right-6 lg:right-10 top-1/2 -translate-y-1/2 w-36 h-36 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full border-4 border-white/10 shadow-[0_0_60px_rgba(99,102,241,0.4)] opacity-60 pointer-events-none select-none z-0"
+       style="will-change: transform, opacity;">
+
+  <!-- Top Header Navigation -->
+  <header class="relative z-10 w-full p-4 glass-panel border-b border-slate-800/80 flex flex-wrap justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white text-xl font-bold font-title shadow-lg shadow-indigo-500/30">
+        J
+      </div>
+      <div>
+        <h1 class="text-2xl font-black font-title tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">
+          JULES RNG
+        </h1>
+        <p class="text-xs text-slate-400 font-semibold tracking-wide">ROBLOX EDITION • <span id="serverVersion">v2.5 SURPUISSANT</span></p>
+      </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="flex items-center gap-4 sm:gap-6 bg-slate-950/60 px-4 py-2 rounded-xl border border-slate-800">
+      <div class="text-center">
+        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Tirages Totaux</div>
+        <div id="statTotalRolls" class="text-lg font-bold font-title text-indigo-400">0</div>
+      </div>
+      <div class="h-8 w-px bg-slate-800"></div>
+      <div class="text-center">
+        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Jules Coins</div>
+        <div id="statSpins" class="text-lg font-bold font-title text-amber-400 transition-colors">0</div>
+        <div class="text-[10px] text-slate-500">+ dans <span class="spinCountdown">10s</span></div>
+      </div>
+      <div class="h-8 w-px bg-slate-800"></div>
+      <div class="text-center">
+        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Multiplicateur Chance</div>
+        <div id="statLuckMult" class="text-lg font-bold font-title text-emerald-400">1.0x</div>
+      </div>
+      <div class="h-8 w-px bg-slate-800"></div>
+      <div class="text-center">
+        <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Jules Découverts</div>
+        <div id="statDiscovered" class="text-lg font-bold font-title text-purple-400">0 / 0</div>
+      </div>
+    </div>
+
+    <!-- Audio & Toggle Controls -->
+    <div class="flex items-center gap-2">
+      <button id="btnSoundToggle" onclick="toggleAudio()" class="glass-button p-2.5 rounded-lg text-slate-300 hover:text-white" title="Activer/Désactiver les effets sonores">
+        <i class="fas fa-volume-up text-lg" id="soundIcon"></i>
+      </button>
+      <button id="btnMusicToggle" onclick="togglePhonkPanel()" class="glass-button p-2.5 rounded-lg text-slate-300 hover:text-white" title="Lecteur Phonk">
+        <i class="fas fa-music text-lg"></i>
+      </button>
+      <button onclick="openModal('modalInventory')" class="glass-button px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-indigo-300 hover:text-white">
+        <i class="fas fa-book-open"></i> <span class="hidden sm:inline">Index & Sac</span>
+      </button>
+      <button onclick="openModal('modalShop')" class="glass-button px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 text-emerald-300 hover:text-white">
+        <i class="fas fa-flask"></i> <span class="hidden sm:inline">Potions & Luck</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Display Screen -->
+  <main class="relative z-10 flex-1 flex flex-col items-center justify-center p-4 my-2 max-w-5xl mx-auto w-full">
+    
+    <!-- Active Equipped Aura Showcase Card -->
+    <div id="equippedDisplay" class="w-full max-w-md glass-panel p-6 rounded-3xl text-center relative overflow-hidden transition-all duration-500 border border-slate-700/60 shadow-2xl mb-6">
+      
+      <!-- Ambient Backlight -->
+      <div id="auraBacklight" class="absolute -inset-10 rounded-full blur-3xl opacity-30 transition-all duration-700 bg-indigo-600 pointer-events-none"></div>
+
+      <div class="relative z-10">
+        <div class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Aura Équipée</div>
+        
+        <!-- Equipped Aura Name -->
+        <h2 id="equippedName" class="text-3xl sm:text-4xl font-black font-title tracking-wide transition-all duration-300 text-slate-100">
+          Jules Basique
+        </h2>
+        
+        <!-- Rarity Badge -->
+        <div class="mt-2 flex flex-wrap items-center justify-center gap-2">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-slate-600/50 bg-slate-900/80" id="equippedRarityBadge">
+            <i class="fas fa-star text-yellow-400"></i>
+            <span id="equippedRarity">Rareté: 1 sur 2</span>
+          </div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-amber-600/50 bg-amber-950/40 text-amber-300" title="Plus le Jules équipé est rare, plus tu gagnes de Jules Coins toutes les 10 secondes">
+            <i class="fas fa-coins"></i>
+            <span id="equippedSpinsRate">+1 Jules Coin / 10s</span>
+          </div>
+        </div>
+
+        <!-- Avatar / Sprite Display -->
+        <div class="relative my-6 flex justify-center items-center h-44">
+          <!-- Beat ring (driven by the phonk rhythm) -->
+          <div id="beatRing" class="absolute w-36 h-36 rounded-full pointer-events-none" style="border: 3px solid #6366f1; opacity: 0;"></div>
+          <div id="equippedAvatarCircle" class="w-36 h-36 rounded-full border-4 border-slate-700 flex items-center justify-center bg-slate-900/90 shadow-2xl relative transition-all duration-500">
+            <span id="equippedEmoji" class="text-7xl filter drop-shadow-md select-none transition-transform duration-300 hover:scale-110">
+              😐
+            </span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <p id="equippedDesc" class="text-sm text-slate-300 italic min-h-[40px] px-4 flex items-center justify-center">
+          "Un Jules tout ce qu'il y a de plus normal. Il mange ses céréales le matin."
+        </p>
+      </div>
+    </div>
+
+    <!-- Announcement Banner for Ultra Rares -->
+    <div id="globalRollBanner" class="h-10 opacity-0 transition-all duration-500 transform translate-y-2 mb-4 text-center">
+      <div id="bannerText" class="inline-block font-title font-bold text-sm sm:text-base px-6 py-1.5 rounded-full border shadow-lg">
+        ✨ UN JULES LÉGENDAIRE A ÉTÉ OBTENU !
+      </div>
+    </div>
+
+    <!-- ROLL CONTROLS SECTION -->
+    <div class="flex flex-col items-center gap-4 w-full max-w-md">
+      
+      <!-- Main Roll Button -->
+      <button id="btnRoll" onclick="triggerRoll()" class="relative group w-full py-5 px-8 rounded-2xl font-title text-2xl font-black tracking-widest uppercase transition-all duration-200 transform active:scale-95 shadow-2xl overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white border-2 border-indigo-400/50 hover:border-white hover:shadow-indigo-500/50">
+        
+        <!-- Button Shine Effect -->
+        <div class="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000"></div>
+        
+        <span class="relative z-10 flex items-center justify-center gap-3">
+          <i class="fas fa-dice text-3xl animate-bounce"></i>
+          <span>ROLL JULES</span>
+        </span>
+      </button>
+
+      <!-- Auto-Roll Toggle & Quick Potions -->
+      <div class="flex items-center justify-between w-full gap-3 px-2">
+        
+        <!-- Auto Roll Switch -->
+        <label class="flex items-center gap-3 cursor-pointer glass-panel px-4 py-2.5 rounded-xl border border-slate-700 hover:border-slate-500 transition-all flex-1 justify-center">
+          <input type="checkbox" id="toggleAutoRoll" onchange="toggleAutoRoll(this.checked)" class="sr-only peer">
+          <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 relative"></div>
+          <span class="text-xs font-bold tracking-wider uppercase text-slate-200">Auto-Roll</span>
+        </label>
+
+        <!-- Skip Animation Switch -->
+        <label class="flex items-center gap-3 cursor-pointer glass-panel px-4 py-2.5 rounded-xl border border-slate-700 hover:border-slate-500 transition-all flex-1 justify-center">
+          <input type="checkbox" id="toggleFastRoll" class="sr-only peer">
+          <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600 relative"></div>
+          <span class="text-xs font-bold tracking-wider uppercase text-slate-200">Roll Rapide</span>
+        </label>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 w-full p-3 glass-panel border-t border-slate-800 text-center text-xs text-slate-500 font-semibold">
+    Fait spécialement pour Jules • Inspiré de Sol's RNG Roblox • Ne pas consommer trop de café Jules.
+  </footer>
+
+  <!-- EQUIPPED JULES TAB (fixed, bottom left, collapsible) -->
+  <div id="equipPanel" class="fixed bottom-3 left-3 z-40 w-[200px] glass-panel rounded-2xl border shadow-2xl overflow-hidden" style="border-color: rgba(99,102,241,0.5)">
+    <div class="flex items-center gap-2 px-3 py-2 cursor-pointer" onclick="toggleEquipPanel()">
+      <div id="equipPanelAvatar" class="w-9 h-9 rounded-full border-2 border-slate-700 bg-slate-900/90 flex items-center justify-center shrink-0 text-xl">
+        <span id="equipPanelEmoji">😐</span>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="text-[9px] font-black font-title tracking-widest text-slate-400 uppercase leading-none mb-0.5">Équipé</div>
+        <div id="equipPanelName" class="text-xs font-bold text-slate-100 truncate">Jules Normal</div>
+      </div>
+      <i id="equipPanelChevron" class="fas fa-chevron-up text-xs text-slate-400 shrink-0"></i>
+    </div>
+    <div id="equipPanelBody" class="phonk-body px-3 pb-3 space-y-1">
+      <div id="equipPanelRarity" class="text-[11px] text-slate-400">Rareté: 1 sur 2</div>
+      <div class="flex items-center justify-between text-[11px]">
+        <span id="equipPanelSpinsGain" class="font-bold text-amber-300">+1 Jules Coin</span>
+        <span class="text-slate-500">dans <span class="spinCountdown">10s</span></span>
+      </div>
+      <button onclick="openModal('modalInventory')" class="mt-1 w-full py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-slate-200 transition">
+        Changer de Jules
+      </button>
+    </div>
+  </div>
+
+  <!-- PHONK PLAYER (fixed, bottom right) -->
+  <div id="phonkPanel" class="fixed bottom-3 right-3 z-40 w-[232px] glass-panel rounded-2xl border shadow-2xl overflow-hidden" style="border-color: rgba(99,102,241,0.5)">
+
+    <!-- Header (always visible) -->
+    <div class="flex items-center gap-2 px-3 py-2">
+      <div id="phonkEq" class="eq flex items-end gap-[2px] h-4 w-4 shrink-0 text-indigo-400"><span></span><span></span><span></span></div>
+      <div class="min-w-0 flex-1 cursor-pointer" onclick="togglePhonkPanel()">
+        <div class="text-[9px] font-black font-title tracking-widest text-slate-400 uppercase leading-none mb-0.5">Phonk</div>
+        <div id="phonkHeaderTitle" class="text-xs font-bold text-slate-100 truncate">Choisis une phonk</div>
+      </div>
+      <button id="btnPhonkPlay" onclick="toggleMusic()" class="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shrink-0 transition" title="Lecture / Pause">
+        <i id="phonkPlayIcon" class="fas fa-play text-xs"></i>
+      </button>
+      <button onclick="togglePhonkPanel()" class="w-7 h-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/70 shrink-0 transition" title="Réduire / Agrandir">
+        <i id="phonkChevron" class="fas fa-chevron-down text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Warning shown when the game is opened straight from a file (YouTube blocks playback then) -->
+    <div id="phonkFileWarn" class="hidden mx-3 mb-2 px-2.5 py-2 rounded-lg bg-amber-500/10 border border-amber-500/40 text-[11px] leading-snug text-amber-200">
+      ⚠️ Jeu ouvert depuis un fichier : YouTube bloque alors la musique. Lance-le avec <b>Lancer_Jules_RNG.bat</b> (Windows) ou via un serveur local.
+    </div>
+
+    <!-- Body (collapsible) -->
+    <div id="phonkBody" class="phonk-body px-3 pb-3 space-y-2.5">
+
+      <!-- Video (YouTube IFrame API, 200x200 minimum) -->
+      <div id="phonkVideo" class="relative w-[200px] h-[200px] mx-auto rounded-xl overflow-hidden bg-slate-950 border border-slate-800" style="pointer-events:none">
+        <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-600">
+          <i class="fas fa-compact-disc text-4xl"></i>
+          <span class="text-[10px] font-bold uppercase tracking-wider">Appuie sur lecture</span>
+        </div>
+        <div id="ytPlayer"></div>
+      </div>
+
+      <!-- Now playing -->
+      <div class="text-center leading-tight">
+        <div id="phonkJules" class="text-[11px] font-bold text-slate-300 truncate"></div>
+        <div id="phonkTitle" class="text-sm font-black font-title truncate"></div>
+        <div id="phonkArtist" class="text-[11px] text-slate-400 truncate"></div>
+      </div>
+
+      <!-- Track picker (only unlocked Jules are selectable) -->
+      <select id="phonkSelect" onchange="selectTrack(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 px-2 py-1.5 focus:outline-none focus:border-indigo-400"></select>
+
+      <!-- Transport -->
+      <div class="flex items-center gap-1.5">
+        <button onclick="stepTrack(-1)" class="glass-button w-9 h-8 rounded-lg text-slate-200 text-xs" title="Phonk précédente"><i class="fas fa-backward-step"></i></button>
+        <button onclick="stepTrack(1)" class="glass-button w-9 h-8 rounded-lg text-slate-200 text-xs" title="Phonk suivante"><i class="fas fa-forward-step"></i></button>
+        <button id="btnPhonkLoop" onclick="toggleMusicLoop()" class="glass-button flex-1 h-8 rounded-lg text-slate-200 text-[11px] font-bold" title="Boucle sur la phonk choisie / enchaîner les phonks débloquées">🔂 Boucle</button>
+      </div>
+
+      <!-- Volume -->
+      <div class="flex items-center gap-2">
+        <i class="fas fa-volume-low text-slate-400 text-xs w-4 text-center"></i>
+        <input id="phonkVolume" type="range" min="0" max="100" step="1" value="40" oninput="setMusicVolume(this.value)" onchange="saveGame()" class="flex-1 accent-indigo-500">
+        <span id="phonkVolumeLabel" class="text-[11px] font-bold text-slate-400 w-7 text-right">40</span>
+      </div>
+
+      <!-- Rhythm calibration for the visual effects -->
+      <div class="flex items-center gap-1.5">
+        <button id="btnTap" onclick="tapBeat()" class="glass-button flex-1 h-8 rounded-lg text-slate-200 text-[11px] font-bold" title="Tape en rythme avec la musique (4 fois ou plus) pour caler les effets. Un seul tap recale juste le temps.">🥁 Caler le rythme</button>
+        <span id="bpmLabel" class="text-[11px] font-bold text-slate-400 w-[64px] text-right">~130 BPM</span>
+        <button onclick="resetBeatSync()" class="glass-button w-7 h-8 rounded-lg text-slate-400 text-xs" title="Réinitialiser le rythme de cette phonk"><i class="fas fa-rotate-left"></i></button>
+      </div>
+
+      <!-- Visual effects toggle -->
+      <label class="flex items-center gap-2 cursor-pointer text-[11px] font-bold text-slate-300">
+        <input type="checkbox" id="phonkFx" onchange="toggleMusicFx(this.checked)" class="accent-indigo-500">
+        Effets visuels sur le rythme
+      </label>
+
+      <!-- Follow equipped Jules -->
+      <label class="flex items-center gap-2 cursor-pointer text-[11px] font-bold text-slate-300">
+        <input type="checkbox" id="phonkFollow" onchange="toggleMusicFollow(this.checked)" class="accent-indigo-500">
+        Suivre le Jules équipé
+      </label>
+
+      <!-- Error area -->
+      <div id="phonkError" class="hidden text-[11px] text-rose-300 leading-snug"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: INVENTORY / INDEX -->
+  <div id="modalInventory" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="glass-panel w-full max-w-4xl max-h-[85vh] rounded-3xl border border-slate-700 flex flex-col overflow-hidden shadow-2xl">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/80">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-book-open text-2xl text-indigo-400"></i>
+          <div>
+            <h3 class="text-xl font-black font-title text-white">Index & Collection de Jules</h3>
+            <p class="text-xs text-slate-400">Débloque tous les Jules et équipe leurs auras uniques</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modalInventory')" class="text-slate-400 hover:text-white text-2xl p-2 rounded-lg hover:bg-slate-800/60">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="p-3 bg-slate-950/40 border-b border-slate-800/60 flex flex-wrap gap-2 items-center justify-between text-xs">
+        <div class="flex gap-2">
+          <button onclick="filterInventory('all')" id="btnFilterAll" class="px-3 py-1.5 rounded-lg font-bold bg-indigo-600 text-white">Tous</button>
+          <button onclick="filterInventory('unlocked')" id="btnFilterUnlocked" class="px-3 py-1.5 rounded-lg font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Obtenus</button>
+          <button onclick="filterInventory('rare')" id="btnFilterRare" class="px-3 py-1.5 rounded-lg font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Rares (>1/1000)</button>
+        </div>
+        <div id="inventoryStats" class="text-slate-400 font-medium">
+          Progression: <span id="inventoryProgressText" class="text-indigo-400 font-bold">0%</span>
+        </div>
+      </div>
+
+      <!-- Inventory Grid -->
+      <div id="inventoryGrid" class="p-4 sm:p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-y-auto flex-1">
+        <!-- Dynamically Populated Cards -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SHOP / LUCK POTIONS -->
+  <div id="modalShop" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="glass-panel w-full max-w-2xl max-h-[85vh] rounded-3xl border border-slate-700 flex flex-col overflow-hidden shadow-2xl">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/80">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-flask text-2xl text-emerald-400"></i>
+          <div>
+            <h3 class="text-xl font-black font-title text-white">Laboratoire de Chance</h3>
+            <p class="text-xs text-slate-400">Booste tes statistiques pour débloquer les variants abyssaux !</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modalShop')" class="text-slate-400 hover:text-white text-2xl p-2 rounded-lg hover:bg-slate-800/60">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Active Potions Status -->
+      <div class="p-4 bg-emerald-950/30 border-b border-emerald-900/40 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-bolt text-emerald-400 text-lg"></i>
+          <span class="text-sm font-bold text-slate-200">Multiplicateur Actif :</span>
+        </div>
+        <span id="activeLuckMultiplier" class="text-lg font-black font-title text-emerald-400">1.0x CHANCE</span>
+      </div>
+      <div class="px-4 py-2.5 bg-amber-950/20 border-b border-amber-900/40 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-coins text-amber-400"></i>
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Jules Coins à dépenser :</span>
+        </div>
+        <span id="shopSpinsBalance" class="text-base font-black font-title text-amber-400">0</span>
+      </div>
+
+      <!-- Shop Items List -->
+      <div id="shopItemsList" class="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+        <!-- Dynamically Populated Shop Items -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ROLL CUTSCENE REVEAL OVERLAY -->
+  <div id="modalRollReveal" class="fixed inset-0 z-50 bg-slate-950/95 flex flex-col items-center justify-center p-6 hidden opacity-0 transition-opacity duration-300">
+    <!-- Cutscene background effects -->
+    <div id="revealBgGlow" class="absolute inset-0 opacity-40 blur-3xl pointer-events-none transition-all duration-1000"></div>
+    
+    <div class="relative z-10 flex flex-col items-center text-center max-w-lg w-full">
+      <div id="revealRarityHeader" class="text-xs font-black font-title uppercase tracking-widest text-slate-400 mb-2">
+        NOUVEAU ROLLO TENTÉ !
+      </div>
+      
+      <!-- Big Animated Emoji / Avatar -->
+      <div id="revealAvatarContainer" class="w-48 h-48 rounded-full border-8 border-slate-700 bg-slate-900/90 flex items-center justify-center my-6 relative shadow-2xl transition-transform duration-700 transform scale-90">
+        <span id="revealEmoji" class="text-8xl select-none">❓</span>
+      </div>
+
+      <!-- Revealed Name -->
+      <h2 id="revealName" class="text-4xl sm:text-5xl font-black font-title tracking-wide mb-2 text-white">
+        ???
+      </h2>
+
+      <!-- Odds Display -->
+      <div id="revealOddsBadge" class="px-5 py-2 rounded-full text-base font-black font-title tracking-wider uppercase mb-4 border border-slate-600 bg-slate-900 text-slate-300">
+        1 SUR ???
+      </div>
+
+      <!-- Description -->
+      <p id="revealDesc" class="text-base text-slate-300 italic mb-5 max-w-md">
+        ...
+      </p>
+
+      <!-- Phonk linked to this Jules -->
+      <div id="revealPhonk" class="hidden mb-6 px-5 py-3 rounded-2xl border border-slate-700 bg-slate-900/80 flex flex-col items-center gap-1">
+        <div id="revealPhonkLabel" class="text-[10px] font-black font-title uppercase tracking-widest text-slate-400"></div>
+        <div id="revealPhonkTitle" class="text-base font-black font-title"></div>
+        <button id="revealPhonkBtn" onclick="playRevealPhonk()" class="mt-1 px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition"></button>
+      </div>
+
+      <!-- Continue Button -->
+      <button onclick="closeRollReveal()" class="glass-button px-8 py-3 rounded-2xl font-title text-lg font-bold tracking-wider text-white border border-slate-500 hover:border-white">
+        CONTINUER <i class="fas fa-arrow-right ml-2"></i>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // --- DATABASE OF JULES VARIANTS ---
+    // Rarity odds are represented as 1 in X (e.g. 2 = 1 in 2 chance)
+    const JULES_DATABASE = [
+      {
+        id: 'jules_normal',
+        name: 'Jules Normal',
+        odds: 2,
+        color: '#94a3b8',
+        emoji: '😐',
+        desc: 'Un Jules standard. Se réveille à 11h du matin et oublie de charger son téléphone.',
+        tier: 'Commun'
+      },
+      {
+        id: 'jules_dormeur',
+        name: 'Jules En Pyjama',
+        odds: 4,
+        color: '#60a5fa',
+        emoji: '😴',
+        desc: 'Il dort encore 5 minutes... depuis plus de 3 heures.',
+        tier: 'Commun'
+      },
+      {
+        id: 'jules_gamer',
+        name: 'Jules Tryharder',
+        odds: 10,
+        color: '#3b82f6',
+        emoji: '🎧',
+        desc: 'Ne vit que pour le ratio K/D et boit du soda au réveil. Crie quand il perd.',
+        tier: 'Atypique'
+      },
+      {
+        id: 'jules_chef',
+        name: 'Jules Pizza Brûlée',
+        odds: 25,
+        color: '#f97316',
+        emoji: '🍕',
+        desc: 'A réussi l’exploit de faire cramer des pâtes dans l’eau bouillante.',
+        tier: 'Atypique'
+      },
+      {
+        id: 'jules_sportif',
+        name: 'Jules Fitness Go Muscu',
+        odds: 50,
+        color: '#10b981',
+        emoji: '🏋️‍♂️',
+        desc: 'Prend de la protéine en poudre pure et fait 2 pompes avant de se reposer.',
+        tier: 'Rare'
+      },
+      {
+        id: 'jules_shiny',
+        name: 'Jules Cromatique',
+        odds: 120,
+        color: '#ec4899',
+        emoji: '✨',
+        desc: 'Brille de mille feux sans aucune raison valable. Attire les papillons.',
+        tier: 'Rare'
+      },
+      {
+        id: 'jules_prof',
+        name: 'Jules Le Professeur',
+        odds: 300,
+        color: '#8b5cf6',
+        emoji: '🧐',
+        desc: 'Sait tout sur tout, surtout sur des trucs totalement inutiles.',
+        tier: 'Épique'
+      },
+      {
+        id: 'jules_matrix',
+        name: 'Jules Cyberpunk',
+        odds: 750,
+        color: '#06b6d4',
+        emoji: '🕶️',
+        desc: 'A vu la vérité derrière la matrice. Code des bugs au lieu de les réparer.',
+        tier: 'Épique'
+      },
+      {
+        id: 'jules_roblox',
+        name: 'Jules Bloxburg VIP',
+        odds: 1500,
+        color: '#eab308',
+        emoji: '🧱',
+        desc: 'Possède 14 millions de Robux virtuels et une maison en forme de cube.',
+        tier: 'Légendaire'
+      },
+      {
+        id: 'jules_ceo',
+        name: 'Jules PDG du Galaxie',
+        odds: 5000,
+        color: '#f43f5e',
+        emoji: '💼',
+        desc: 'Achète des planètes pendant la pause café. Ne négocie jamais.',
+        tier: 'Légendaire'
+      },
+      {
+        id: 'jules_gold',
+        name: 'Jules Doré 24 Carats',
+        odds: 20000,
+        color: '#fbbf24',
+        emoji: '👑',
+        desc: 'Tellement lourd qu’il s’enfonce dans le sol à chaque pas. Pure opulence.',
+        tier: 'Mythique'
+      },
+      {
+        id: 'jules_cosmic',
+        name: 'Jules Étoile Nébuleuse',
+        odds: 75000,
+        color: '#a855f7',
+        emoji: '🌌',
+        desc: 'Contient une galaxie entière dans sa poche. Dégage une aura cosmique hypnotisante.',
+        tier: 'Mythique'
+      },
+      {
+        id: 'jules_glitch',
+        name: 'Jules Glitch du Void',
+        odds: 250000,
+        color: '#22c55e',
+        emoji: '👾',
+        desc: 'S’est échappé du code source du jeu. Déforme la réalité autour de lui.',
+        tier: 'Divin'
+      },
+      {
+        id: 'jules_god',
+        name: 'Jules Divin Suprême',
+        odds: 1000000,
+        color: '#38bdf8',
+        emoji: '⚡',
+        desc: 'Le Jules Ultime. Contrôle le temps, l’espace et l’heure de passage à table.',
+        tier: 'Exotique'
+      }
+    ];
+
+    // SORT DATABASE BY ODDS ASCENDING
+    JULES_DATABASE.sort((a, b) => a.odds - b.odds);
+
+    // Each Jules gets its own entrance animation, played once, the first time it's unlocked.
+    const REVEAL_ANIM = {
+      jules_normal:  'reveal-anim-fade',
+      jules_dormeur: 'reveal-anim-drop',
+      jules_gamer:   'reveal-anim-shake',
+      jules_chef:    'reveal-anim-wobble',
+      jules_sportif: 'reveal-anim-bounce',
+      jules_shiny:   'reveal-anim-sparkle',
+      jules_prof:    'reveal-anim-flip',
+      jules_matrix:  'reveal-anim-glitch',
+      jules_roblox:  'reveal-anim-cube',
+      jules_ceo:     'reveal-anim-slide',
+      jules_gold:    'reveal-anim-shine',
+      jules_cosmic:  'reveal-anim-orbit',
+      jules_glitch:  'reveal-anim-corrupt',
+      jules_god:     'reveal-anim-divine'
+    };
+
+    // --- PHONK TRACKS: une phonk existante par Jules (lecture via YouTube) ---
+    // `yt` = identifiant de la vidéo YouTube (la partie après "watch?v=").
+    // Pour changer une musique : remplace `title`, `artist` et `yt`.
+    const PHONK_TRACKS = {
+      jules_normal:  { title: 'Sahara',           artist: 'Hensonn',               yt: 'mBGwZBb6eew' },
+      jules_dormeur: { title: 'Sleepwalker (Slowed)', artist: 'akiaura',           yt: 'cLupeDNMauk' },
+      jules_gamer:   { title: 'Murder In My Mind', artist: 'Kordhell',             yt: 'w-sQRS-Lc9k' },
+      jules_chef:    { title: 'Passo Bem Solto',  artist: 'ATLXS',                 yt: 'A3xxG5zHuCA' },
+      jules_sportif: { title: 'GigaChad Theme',   artist: 'g3ox_em',               yt: 'OVh0bMNSFss' },
+      jules_shiny:   { title: 'RAVE',             artist: 'Dxrk ダーク',            yt: 'PTZgxW_3LIQ' },
+      jules_prof:    { title: 'Metamorphosis',    artist: 'INTERWORLD',            yt: 'lJvRohYSrZM' },
+      jules_matrix:  { title: 'Neon Blade',       artist: 'MoonDeity',             yt: 'gfIb3nMjXgg' },
+      jules_roblox:  { title: 'Close Eyes',       artist: 'DVRST',                 yt: 'OSbhFr5TzkQ' },
+      jules_ceo:     { title: 'AURA',             artist: 'Ogryzek',               yt: 'CgXFHAEVJtA' },
+      jules_gold:    { title: 'Live Another Day', artist: 'Kordhell',              yt: '7pmUQJ5KAlU' },
+      jules_cosmic:  { title: 'Dream Space',      artist: 'DVRST',                 yt: '7soYtJI1pHA' },
+      jules_glitch:  { title: 'Scary Garry',      artist: 'Kaito Shoma & DJ Paul', yt: 'RsU5i0YFAcY' },
+      jules_god:     { title: 'RAPTURE',          artist: 'INTERWORLD',            yt: 'DeLLmFuMIGc' }
+    };
+    JULES_DATABASE.forEach(j => { j.phonk = PHONK_TRACKS[j.id] || null; });
+
+    // --- POTIONS / LUCK ITEMS ---
+    const SHOP_ITEMS = [
+      {
+        id: 'pot_cafe',
+        name: 'Café de Jules',
+        multiplier: 1.5,
+        duration: 30, // seconds
+        costRolls: 10,
+        icon: '☕',
+        desc: '+50% de Chance pendant 30 secondes.'
+      },
+      {
+        id: 'pot_energy',
+        name: 'Monster Jules Edition',
+        multiplier: 3.0,
+        duration: 45,
+        costRolls: 50,
+        icon: '⚡',
+        desc: '+200% (x3) de Chance pendant 45 secondes.'
+      },
+      {
+        id: 'pot_clover',
+        name: 'Trèfle d’Or de Jules',
+        multiplier: 10.0,
+        duration: 20,
+        costRolls: 250,
+        icon: '🍀',
+        desc: 'Multiplie ta chance par 10x pendant 20 secondes !'
+      }
+    ];
+
+    // --- GAME STATE ---
+    let gameState = {
+      totalRolls: 0,
+      spins: 0, // currency actually spent on potions (totalRolls is just the lifetime counter)
+      inventory: {}, // id -> count
+      equippedId: 'jules_normal',
+      luckMultiplier: 1.0,
+      activeBoosts: [], // { id, expiresAt, multiplier }
+      soundEnabled: true,
+      // Phonk player settings (saved)
+      musicId: 'jules_normal',   // Jules whose phonk is selected
+      musicFollow: false,        // auto-switch phonk when a Jules is equipped
+      musicLoop: 'one',          // 'one' = loop selected phonk, 'all' = chain unlocked phonks
+      musicVolume: 40,           // 0-100
+      musicPanelOpen: true,
+      musicFx: !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches), // beat visual effects
+      beatSync: {},              // per Jules id: { bpm, offset } set with the "Caler le rythme" button
+      equipPanelOpen: true       // collapsible "Jules équipé" tab
+    };
+
+    let isRolling = false;
+    let autoRollInterval = null;
+    let canvas, ctx;
+    let particles = [];
+    let audioCtx = null;
+
+    // Load Saved Data
+    function loadGame() {
+      const saved = localStorage.getItem('jules_rng_save_v1');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          gameState.totalRolls = parsed.totalRolls || 0;
+          // Migration: older saves never spent spins on potions, so grandfather
+          // whatever totalRolls they already had into the new spendable balance.
+          gameState.spins = Number.isFinite(parsed.spins) ? parsed.spins : gameState.totalRolls;
+          gameState.inventory = parsed.inventory || {};
+          gameState.equippedId = parsed.equippedId || 'jules_normal';
+          gameState.musicId = parsed.musicId || 'jules_normal';
+          gameState.musicFollow = !!parsed.musicFollow;
+          gameState.musicLoop = parsed.musicLoop === 'all' ? 'all' : 'one';
+          gameState.musicVolume = Number.isFinite(parsed.musicVolume) ? parsed.musicVolume : 40;
+          if (typeof parsed.musicPanelOpen === 'boolean') gameState.musicPanelOpen = parsed.musicPanelOpen;
+          if (typeof parsed.musicFx === 'boolean') gameState.musicFx = parsed.musicFx;
+          if (parsed.beatSync && typeof parsed.beatSync === 'object') gameState.beatSync = parsed.beatSync;
+          if (typeof parsed.equipPanelOpen === 'boolean') gameState.equipPanelOpen = parsed.equipPanelOpen;
+        } catch(e) {
+          console.error("Erreur de chargement de la sauvegarde", e);
+        }
+      }
+      
+      // Ensure at least default is in inventory
+      if (!gameState.inventory['jules_normal']) {
+        gameState.inventory['jules_normal'] = 1;
+      }
+
+      // By default, the best Jules you own is the one equipped (maximises passive Spins income)
+      gameState.equippedId = getBestOwnedId();
+
+      // Phonk: the selected track must belong to an unlocked Jules
+      if (!gameState.inventory[gameState.musicId]) {
+        gameState.musicId = 'jules_normal';
+      }
+      // First visit on a small screen: start with the player collapsed
+      if (!saved && window.innerWidth < 640) {
+        gameState.musicPanelOpen = false;
+      }
+
+      updateUI();
+    }
+
+    function saveGame() {
+      localStorage.setItem('jules_rng_save_v1', JSON.stringify({
+        totalRolls: gameState.totalRolls,
+        spins: gameState.spins,
+        inventory: gameState.inventory,
+        equippedId: gameState.equippedId,
+        musicId: gameState.musicId,
+        musicFollow: gameState.musicFollow,
+        musicLoop: gameState.musicLoop,
+        musicVolume: gameState.musicVolume,
+        musicPanelOpen: gameState.musicPanelOpen,
+        musicFx: gameState.musicFx,
+        beatSync: gameState.beatSync,
+        equipPanelOpen: gameState.equipPanelOpen
+      }));
+    }
+
+    // --- AUDIO SYSTEM ---
+    function playSound(type) {
+      if (!gameState.soundEnabled) return;
+
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'roll_tick') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(300 + Math.random() * 200, now);
+          gain.gain.setValueAtTime(0.05, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'reveal_common') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === 'reveal_rare') {
+          // Arpeggio sound
+          [523.25, 659.25, 783.99].forEach((freq, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.type = 'sine';
+            o.frequency.setValueAtTime(freq, now + idx * 0.08);
+            g.gain.setValueAtTime(0.2, now + idx * 0.08);
+            g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+            o.start(now + idx * 0.08);
+            o.stop(now + idx * 0.08 + 0.3);
+          });
+        } else if (type === 'reveal_legendary') {
+          // Powerful chord sound
+          [261.63, 329.63, 392.00, 523.25, 659.25].forEach((freq) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.type = 'sawtooth';
+            o.frequency.setValueAtTime(freq, now);
+            g.gain.setValueAtTime(0.15, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+            o.start(now);
+            o.stop(now + 1.2);
+          });
+        }
+      } catch (e) {
+        // Audio fallback ignore
+      }
+    }
+
+    function toggleAudio() {
+      gameState.soundEnabled = !gameState.soundEnabled;
+      const icon = document.getElementById('soundIcon');
+      if (gameState.soundEnabled) {
+        icon.className = 'fas fa-volume-up text-lg text-emerald-400';
+      } else {
+        icon.className = 'fas fa-volume-mute text-lg text-rose-400';
+      }
+    }
+
+    // --- ROLL LOGIC ---
+
+    // Finds the rarest (highest odds) Jules currently owned — used to auto-equip
+    // the best one by default.
+    function getBestOwnedId() {
+      let best = 'jules_normal';
+      let bestOdds = -1;
+      JULES_DATABASE.forEach(j => {
+        if ((gameState.inventory[j.id] || 0) > 0 && j.odds > bestOdds) {
+          bestOdds = j.odds;
+          best = j.id;
+        }
+      });
+      return best;
+    }
+
+    // Spins earned per passive tick (every 10s) scale with how rare the currently
+    // EQUIPPED Jules is. Uses a log curve on the odds so it grows smoothly from
+    // common to exotic (no need to hand-tune a table every time a new Jules is added).
+    function getSpinsPerRoll(equippedId) {
+      const eq = JULES_DATABASE.find(j => j.id === (equippedId || gameState.equippedId)) || JULES_DATABASE[0];
+      return Math.max(1, Math.round(1 + Math.log10(eq.odds) * 1.8));
+    }
+
+    function calculateTotalLuck() {
+      let multiplier = 1.0;
+      const now = Date.now();
+      
+      // Filter expired boosts
+      gameState.activeBoosts = gameState.activeBoosts.filter(b => b.expiresAt > now);
+      
+      gameState.activeBoosts.forEach(b => {
+        multiplier *= b.multiplier;
+      });
+
+      gameState.luckMultiplier = multiplier;
+      return multiplier;
+    }
+
+    function rollJules() {
+      const luck = calculateTotalLuck();
+      
+      // Roll a random float between 0 and 1
+      // Check variants starting from highest odds (rarest) to lowest
+      const reverseDb = [...JULES_DATABASE].sort((a, b) => b.odds - a.odds);
+
+      for (let item of reverseDb) {
+        // Effective odds with luck multiplier
+        const effectiveOdds = Math.max(1, item.odds / luck);
+        const chance = 1 / effectiveOdds;
+        
+        if (Math.random() <= chance) {
+          return item;
+        }
+      }
+
+      // Default fallback
+      return JULES_DATABASE[0];
+    }
+
+    function triggerRoll() {
+      if (isRolling) return;
+      isRolling = true;
+
+      const isFast = document.getElementById('toggleFastRoll').checked;
+      const btn = document.getElementById('btnRoll');
+      btn.disabled = true;
+      btn.classList.add('opacity-75', 'cursor-not-allowed');
+
+      const outcome = rollJules();
+      gameState.totalRolls++;
+
+      // Increment inventory
+      if (!gameState.inventory[outcome.id]) {
+        gameState.inventory[outcome.id] = 0;
+        pendingRevealId = outcome.id; // keep its phonk hidden until the reveal
+      }
+      gameState.inventory[outcome.id]++;
+
+      saveGame();
+      updateUI();
+
+      if (isFast) {
+        // Skip animation
+        handleRollResult(outcome);
+        isRolling = false;
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+      } else {
+        // Play Roll Cutscene / Animation
+        runRollAnimation(outcome, () => {
+          handleRollResult(outcome);
+          isRolling = false;
+          btn.disabled = false;
+          btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        });
+      }
+    }
+
+    function runRollAnimation(targetOutcome, callback) {
+      const displayCard = document.getElementById('equippedDisplay');
+      const emojiEl = document.getElementById('equippedEmoji');
+      const nameEl = document.getElementById('equippedName');
+
+      let speed = 50;
+      let counter = 0;
+      const maxTicks = 20;
+
+      displayCard.classList.add('shake');
+
+      function tick() {
+        if (counter < maxTicks) {
+          // Pick a random Jules for tick showcase
+          const randomSample = JULES_DATABASE[Math.floor(Math.random() * JULES_DATABASE.length)];
+          emojiEl.innerText = randomSample.emoji;
+          nameEl.innerText = randomSample.name;
+          nameEl.style.color = randomSample.color;
+
+          playSound('roll_tick');
+          counter++;
+          speed += 12; // Slow down over time
+          setTimeout(tick, speed);
+        } else {
+          displayCard.classList.remove('shake');
+          callback();
+        }
+      }
+
+      tick();
+    }
+
+    function handleRollResult(item) {
+      pendingRevealId = null; // the phonk of this Jules is now unlocked
+      // Auto-equip if better or if unlocked for the first time
+      const isNew = gameState.inventory[item.id] === 1;
+
+      // Check rarity to trigger sound & cutscene modal if rare (> 100)
+      if (item.odds >= 1000 || isNew) {
+        showRollRevealModal(item, isNew);
+      }
+
+      if (item.odds >= 500) {
+        triggerGlobalBanner(item);
+      }
+
+      if (item.odds >= 1000) {
+        playSound('reveal_legendary');
+      } else if (item.odds >= 100) {
+        playSound('reveal_rare');
+      } else {
+        playSound('reveal_common');
+      }
+
+      // Auto-equip only if this roll is better than what's currently equipped —
+      // the best owned Jules stays equipped by default (max passive Spins rate).
+      const currentEquipped = getJules(gameState.equippedId);
+      if (!currentEquipped || item.odds > currentEquipped.odds) {
+        equipJules(item.id);
+      }
+    }
+
+    // --- UI UPDATES & MODALS ---
+    function updateUI() {
+      calculateTotalLuck();
+
+      // Stats
+      document.getElementById('statTotalRolls').innerText = gameState.totalRolls.toLocaleString('fr-FR');
+      document.getElementById('statSpins').innerText = gameState.spins.toLocaleString('fr-FR');
+      document.getElementById('shopSpinsBalance').innerText = gameState.spins.toLocaleString('fr-FR');
+      document.getElementById('statLuckMult').innerText = gameState.luckMultiplier.toFixed(1) + 'x';
+
+      const discoveredCount = Object.keys(gameState.inventory).length;
+      document.getElementById('statDiscovered').innerText = `${discoveredCount} / ${JULES_DATABASE.length}`;
+
+      // Active Boost Badge in Shop
+      document.getElementById('activeLuckMultiplier').innerText = `${gameState.luckMultiplier.toFixed(1)}x CHANCE`;
+
+      // Update Equipped Card
+      const equipped = JULES_DATABASE.find(j => j.id === gameState.equippedId) || JULES_DATABASE[0];
+      
+      document.getElementById('equippedName').innerText = equipped.name;
+      document.getElementById('equippedName').style.color = equipped.color;
+      document.getElementById('equippedEmoji').innerText = equipped.emoji;
+      document.getElementById('equippedRarity').innerText = `Rareté: 1 sur ${equipped.odds.toLocaleString('fr-FR')}`;
+      document.getElementById('equippedSpinsRate').innerText = `+${getSpinsPerRoll(equipped.id)} Jules Coin${getSpinsPerRoll(equipped.id) > 1 ? 's' : ''} / 10s`;
+      document.getElementById('equippedDesc').innerText = `"${equipped.desc}"`;
+      
+      const avatarCircle = document.getElementById('equippedAvatarCircle');
+      avatarCircle.style.borderColor = equipped.color;
+      document.getElementById('beatRing').style.borderColor = equipped.color;
+      avatarCircle.style.boxShadow = `0 0 35px ${equipped.color}80`;
+
+      const backlight = document.getElementById('auraBacklight');
+      backlight.style.backgroundColor = equipped.color;
+
+      // Update dynamic canvas particle color theme
+      setCanvasAuraColor(equipped.color);
+
+      // Render Shop Items & Inventory
+      renderInventoryGrid();
+      renderShopItems();
+      renderMusicUI();
+      renderEquipPanel();
+    }
+
+    function triggerGlobalBanner(item) {
+      const banner = document.getElementById('globalRollBanner');
+      const bannerText = document.getElementById('bannerText');
+
+      bannerText.innerText = `✨ ROLL INCROYABLE ! UN ${item.name.toUpperCase()} (1/${item.odds.toLocaleString('fr-FR')}) A ÉTÉ OBTENU ! ✨`;
+      bannerText.style.borderColor = item.color;
+      bannerText.style.color = item.color;
+      bannerText.style.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+
+      banner.classList.remove('opacity-0', 'translate-y-2');
+      banner.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        banner.classList.remove('opacity-100', 'translate-y-0');
+        banner.classList.add('opacity-0', 'translate-y-2');
+      }, 4000);
+    }
+
+    function showRollRevealModal(item, isNew) {
+      const modal = document.getElementById('modalRollReveal');
+      document.getElementById('revealHeader');
+      document.getElementById('revealName').innerText = item.name;
+      document.getElementById('revealName').style.color = item.color;
+      document.getElementById('revealEmoji').innerText = item.emoji;
+      document.getElementById('revealOddsBadge').innerText = `1 SUR ${item.odds.toLocaleString('fr-FR')}`;
+      document.getElementById('revealOddsBadge').style.borderColor = item.color;
+      document.getElementById('revealOddsBadge').style.color = item.color;
+      document.getElementById('revealDesc').innerText = `"${item.desc}"`;
+
+      const avatarContainer = document.getElementById('revealAvatarContainer');
+      avatarContainer.style.borderColor = item.color;
+      avatarContainer.style.boxShadow = `0 0 50px ${item.color}`;
+
+      // Distinct unlock animation per Jules — only the first time it's obtained
+      avatarContainer.className = avatarContainer.className.replace(/\breveal-anim-\S+/g, '').trim();
+      if (isNew) {
+        const animClass = REVEAL_ANIM[item.id] || 'reveal-anim-fade';
+        void avatarContainer.offsetWidth; // force reflow so the animation restarts every time
+        avatarContainer.classList.add(animClass);
+      }
+
+      document.getElementById('revealBgGlow').style.backgroundColor = item.color;
+
+      // Phonk linked to this Jules
+      const phonkBox = document.getElementById('revealPhonk');
+      if (item.phonk) {
+        phonkBox.dataset.julesId = item.id;
+        document.getElementById('revealPhonkLabel').innerText = isNew ? '🎵 Nouvelle phonk débloquée' : '🎵 Phonk associée';
+        const rpTitle = document.getElementById('revealPhonkTitle');
+        rpTitle.innerText = `${item.phonk.title} — ${item.phonk.artist}`;
+        rpTitle.style.color = item.color;
+        phonkBox.classList.remove('hidden');
+        renderMusicUI();
+      } else {
+        phonkBox.classList.add('hidden');
+      }
+
+      modal.classList.remove('hidden');
+      setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+
+    function closeRollReveal() {
+      const modal = document.getElementById('modalRollReveal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function equipJules(id) {
+      if (gameState.inventory[id]) {
+        gameState.equippedId = id;
+        saveGame();
+        updateUI();
+
+        // Phonk: follow the equipped Jules (only changes the track; keeps play/pause state)
+        if (gameState.musicFollow && isTrackUnlocked(id) && gameState.musicId !== id) {
+          selectTrack(id, musicPlaying);
+        }
+      }
+    }
+
+    function toggleAutoRoll(enabled) {
+      if (enabled) {
+        autoRollInterval = setInterval(() => {
+          if (!isRolling) {
+            triggerRoll();
+          }
+        }, 350);
+      } else {
+        if (autoRollInterval) clearInterval(autoRollInterval);
+      }
+    }
+
+    let currentFilter = 'all';
+
+    function filterInventory(filter) {
+      currentFilter = filter;
+      ['All', 'Unlocked', 'Rare'].forEach(f => {
+        const btn = document.getElementById(`btnFilter${f}`);
+        if (f.toLowerCase() === filter) {
+          btn.className = 'px-3 py-1.5 rounded-lg font-bold bg-indigo-600 text-white';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-lg font-bold bg-slate-800 text-slate-300 hover:bg-slate-700';
+        }
+      });
+      renderInventoryGrid();
+    }
+
+    function renderInventoryGrid() {
+      const grid = document.getElementById('inventoryGrid');
+      grid.innerHTML = '';
+
+      const discoveredCount = Object.keys(gameState.inventory).length;
+      const progressPercent = Math.round((discoveredCount / JULES_DATABASE.length) * 100);
+      document.getElementById('inventoryProgressText').innerText = `${progressPercent}%`;
+
+      JULES_DATABASE.forEach(item => {
+        const count = gameState.inventory[item.id] || 0;
+        const isUnlocked = count > 0;
+        const isEquipped = gameState.equippedId === item.id;
+        const phonkUnlocked = !!item.phonk && isTrackUnlocked(item.id);
+        const phonkActive = phonkUnlocked && gameState.musicId === item.id && musicPlaying;
+
+        // Apply filters
+        if (currentFilter === 'unlocked' && !isUnlocked) return;
+        if (currentFilter === 'rare' && item.odds < 1000) return;
+
+        const card = document.createElement('div');
+        card.className = `relative glass-panel p-4 rounded-2xl flex flex-col items-center text-center border transition-all duration-300 ${
+          isUnlocked 
+            ? 'border-slate-700 hover:border-slate-500 hover:-translate-y-1' 
+            : 'border-slate-800/40 opacity-40 grayscale'
+        }`;
+
+        if (isUnlocked) {
+          card.style.boxShadow = `0 4px 20px -5px ${item.color}30`;
+        }
+
+        card.innerHTML = `
+          ${isEquipped ? `<span class="absolute top-2 right-2 bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Équipé</span>` : ''}
+          <div class="text-4xl my-2 select-none">${isUnlocked ? item.emoji : '🔒'}</div>
+          <div class="text-sm font-bold font-title line-clamp-1" style="color: ${isUnlocked ? item.color : '#94a3b8'}">
+            ${isUnlocked ? item.name : '???'}
+          </div>
+          <div class="text-[11px] font-semibold text-slate-400 mt-1">
+            1 sur ${item.odds.toLocaleString('fr-FR')}
+          </div>
+          <div class="text-xs font-bold text-slate-300 mt-2">
+            Possédés: <span class="text-indigo-400">${count}</span>
+          </div>
+          ${
+            phonkUnlocked
+              ? `<div class="mt-2 text-[11px] leading-tight text-slate-400">
+                   <i class="fas fa-music mr-1" style="color:${item.color}"></i>${item.phonk.title}
+                   <div class="text-slate-500">${item.phonk.artist}</div>
+                 </div>
+                 <button onclick="selectTrack('${item.id}')" class="mt-2 w-full py-1.5 rounded-xl text-xs font-bold transition ${phonkActive ? 'bg-indigo-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'}">
+                   ${phonkActive ? '♪ En fond' : '▶ Phonk'}
+                 </button>`
+              : `<div class="mt-2 text-[11px] text-slate-600"><i class="fas fa-music mr-1"></i>???</div>`
+          }
+          ${
+            isUnlocked && !isEquipped 
+              ? `<button onclick="equipJules('${item.id}')" class="mt-3 w-full py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition">Équiper</button>` 
+              : ''
+          }
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function renderShopItems() {
+      const container = document.getElementById('shopItemsList');
+      container.innerHTML = '';
+
+      SHOP_ITEMS.forEach(potion => {
+        const card = document.createElement('div');
+        card.className = 'glass-panel p-4 rounded-2xl border border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4';
+
+        const canAfford = gameState.spins >= potion.costRolls;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-4 text-center sm:text-left">
+            <div class="text-4xl p-3 bg-slate-900 rounded-2xl border border-slate-800">${potion.icon}</div>
+            <div>
+              <h4 class="text-lg font-bold font-title text-white">${potion.name}</h4>
+              <p class="text-xs text-slate-400 mt-0.5">${potion.desc}</p>
+              <div class="text-xs font-bold ${canAfford ? 'text-emerald-400' : 'text-rose-400'} mt-1">Coût: ${potion.costRolls} Jules Coins ${!canAfford ? `(il t'en manque ${potion.costRolls - gameState.spins})` : ''}</div>
+            </div>
+          </div>
+          <button onclick="buyPotion('${potion.id}')" ${!canAfford ? 'disabled' : ''} class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold font-title text-sm transition-all ${
+            canAfford 
+              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30' 
+              : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+          }">
+            Acheter Boost
+          </button>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function buyPotion(potionId) {
+      const potion = SHOP_ITEMS.find(p => p.id === potionId);
+      if (!potion || gameState.spins < potion.costRolls) return;
+
+      // Actually spend the spins — this is the real cost of the potion
+      gameState.spins -= potion.costRolls;
+
+      // Add boost
+      const expiresAt = Date.now() + (potion.duration * 1000);
+      gameState.activeBoosts.push({
+        id: potion.id,
+        expiresAt: expiresAt,
+        multiplier: potion.multiplier
+      });
+
+      playSound('reveal_rare');
+      saveGame();
+      updateUI();
+    }
+
+    // =====================================================================
+    // --- PHONK MUSIC PLAYER (YouTube IFrame API) ---
+    // =====================================================================
+    let ytPlayer = null;
+    let ytReady = false;
+    let ytLoading = false;
+    let ytQueue = [];
+    let currentTrackId = null;   // Jules id whose video is loaded in the player
+    let musicPlaying = false;
+    let musicError = null;       // { code, id }
+    let pendingRevealId = null;  // Jules being revealed: its phonk stays hidden until then
+    let lastSelectSig = '';
+    let silentWatchdog = null;
+
+    function getJules(id) {
+      return JULES_DATABASE.find(j => j.id === id);
+    }
+
+    function isTrackUnlocked(id) {
+      return (gameState.inventory[id] || 0) > 0 && id !== pendingRevealId;
+    }
+
+    function getUnlockedTracks() {
+      return JULES_DATABASE.filter(j => j.phonk && isTrackUnlocked(j.id));
+    }
+
+    // The YouTube API is only loaded the first time the player is used
+    function ensureMusicPlayer(callback) {
+      if (ytReady) { callback(); return; }
+      ytQueue.push(callback);
+      if (ytLoading) return;
+      ytLoading = true;
+
+      if (window.YT && window.YT.Player) {
+        createYouTubePlayer();
+        return;
+      }
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      tag.onerror = () => {
+        ytLoading = false;
+        ytQueue = [];
+        musicError = { code: 'api', id: null };
+        refreshMusic();
+      };
+      document.head.appendChild(tag);
+    }
+
+    // Called automatically by the YouTube API once it has loaded
+    function onYouTubeIframeAPIReady() {
+      createYouTubePlayer();
+    }
+
+    function createYouTubePlayer() {
+      const vars = { playsinline: 1, controls: 0, disablekb: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, fs: 0 };
+      if (location.protocol === 'http:' || location.protocol === 'https:') {
+        vars.origin = location.origin;
+      }
+      ytPlayer = new YT.Player('ytPlayer', {
+        width: 200,
+        height: 200,
+        playerVars: vars,
+        events: {
+          onReady: onPlayerReady,
+          onStateChange: onPlayerStateChange,
+          onError: onPlayerError
+        }
+      });
+    }
+
+    function onPlayerReady() {
+      ytReady = true;
+      ytLoading = false;
+      ytPlayer.setVolume(gameState.musicVolume);
+      const queued = ytQueue;
+      ytQueue = [];
+      queued.forEach(fn => fn());
+    }
+
+    function onPlayerStateChange(e) {
+      const S = YT.PlayerState;
+      musicPlaying = (e.data === S.PLAYING || e.data === S.BUFFERING);
+      if (e.data === S.PLAYING) musicError = null;
+      if (!musicPlaying) beatClock.init = false;
+
+      if (e.data === S.ENDED) {
+        if (gameState.musicLoop === 'all' && getUnlockedTracks().length > 1) {
+          stepTrack(1);
+        } else {
+          ytPlayer.seekTo(0, true);
+          ytPlayer.playVideo();
+        }
+      }
+      refreshMusic();
+    }
+
+    function onPlayerError(e) {
+      musicPlaying = false;
+      musicError = { code: e.data, id: currentTrackId };
+      refreshMusic();
+    }
+
+    function loadTrackInPlayer(id) {
+      const j = getJules(id);
+      if (!j || !j.phonk) return;
+      musicError = null;
+      currentTrackId = id;
+      beatClock.init = false;
+      ytPlayer.loadVideoById(j.phonk.yt);
+
+      // If nothing starts after a few seconds, tell the player why instead of staying silent
+      clearTimeout(silentWatchdog);
+      silentWatchdog = setTimeout(() => {
+        if (currentTrackId !== id || musicError || !ytReady) return;
+        const st = ytPlayer.getPlayerState();
+        if (st === -1 || st === 5) {
+          musicError = { code: 'silent', id };
+          refreshMusic();
+        }
+      }, 5000);
+    }
+
+    // Choose a phonk (only from unlocked Jules) and play it
+    function selectTrack(id, autoplay = true) {
+      const j = getJules(id);
+      if (!j || !j.phonk || !isTrackUnlocked(id)) return;
+
+      gameState.musicId = id;
+      saveGame();
+
+      if (autoplay) {
+        ensureMusicPlayer(() => {
+          if (currentTrackId === id && !musicError) {
+            ytPlayer.playVideo();
+          } else {
+            loadTrackInPlayer(id);
+          }
+        });
+      }
+      refreshMusic();
+    }
+
+    function toggleMusic() {
+      if (!isTrackUnlocked(gameState.musicId)) gameState.musicId = 'jules_normal';
+
+      ensureMusicPlayer(() => {
+        const id = gameState.musicId;
+        if (currentTrackId !== id || musicError) {
+          loadTrackInPlayer(id);
+          return;
+        }
+        const st = ytPlayer.getPlayerState();
+        if (st === YT.PlayerState.PLAYING || st === YT.PlayerState.BUFFERING) {
+          ytPlayer.pauseVideo();
+        } else {
+          ytPlayer.playVideo();
+        }
+      });
+    }
+
+    function stepTrack(dir) {
+      const list = getUnlockedTracks();
+      if (!list.length) return;
+      let idx = list.findIndex(j => j.id === gameState.musicId);
+      if (idx < 0) idx = dir > 0 ? -1 : 0;
+      idx = (idx + dir + list.length) % list.length;
+      selectTrack(list[idx].id, true);
+    }
+
+    function toggleMusicLoop() {
+      gameState.musicLoop = gameState.musicLoop === 'all' ? 'one' : 'all';
+      saveGame();
+      renderMusicUI();
+    }
+
+    function toggleMusicFollow(enabled) {
+      gameState.musicFollow = enabled;
+      saveGame();
+      if (enabled && isTrackUnlocked(gameState.equippedId) && gameState.musicId !== gameState.equippedId) {
+        selectTrack(gameState.equippedId, musicPlaying);
+      }
+    }
+
+    function setMusicVolume(value) {
+      const v = Math.max(0, Math.min(100, parseInt(value, 10) || 0));
+      gameState.musicVolume = v;
+      document.getElementById('phonkVolumeLabel').innerText = v;
+      if (ytReady) ytPlayer.setVolume(v);
+    }
+
+    function togglePhonkPanel() {
+      gameState.musicPanelOpen = !gameState.musicPanelOpen;
+      saveGame();
+      renderMusicUI();
+    }
+
+    function toggleEquipPanel() {
+      gameState.equipPanelOpen = !gameState.equipPanelOpen;
+      saveGame();
+      renderEquipPanel();
+    }
+
+    function renderEquipPanel() {
+      const equipped = getJules(gameState.equippedId) || JULES_DATABASE[0];
+      document.getElementById('equipPanelEmoji').innerText = equipped.emoji;
+      document.getElementById('equipPanelName').innerText = equipped.name;
+      document.getElementById('equipPanelName').style.color = equipped.color;
+      document.getElementById('equipPanelAvatar').style.borderColor = equipped.color;
+      document.getElementById('equipPanelRarity').innerText = `Rareté: 1 sur ${equipped.odds.toLocaleString('fr-FR')}`;
+      const gain = getSpinsPerRoll(equipped.id);
+      document.getElementById('equipPanelSpinsGain').innerText = `+${gain} Jules Coin${gain > 1 ? 's' : ''}`;
+
+      const open = gameState.equipPanelOpen;
+      document.getElementById('equipPanelBody').classList.toggle('collapsed', !open);
+      document.getElementById('equipPanelChevron').className = 'fas ' + (open ? 'fa-chevron-down' : 'fa-chevron-up') + ' text-xs text-slate-400 shrink-0';
+    }
+
+    // "Mettre en fond" button of the reveal screen
+    function playRevealPhonk() {
+      const id = document.getElementById('revealPhonk').dataset.julesId;
+      if (id) selectTrack(id, true);
+    }
+
+    // =====================================================================
+    // --- BEAT ENGINE: effets visuels calés sur le rythme de la phonk ---
+    // YouTube ne donne pas accès au son : on utilise le temps de lecture de la
+    // vidéo + un BPM et un décalage (réglables avec le bouton "Caler le rythme").
+    // =====================================================================
+    const DEFAULT_BPM = 130;          // tempo typique de la phonk, tant que rien n'est calé
+    const TAP_LATENCY = 0.06;         // compense le temps de réaction du tap (secondes)
+    const beatClock = { init: false, drift: 0, lastT: -1 };
+    let tapTimes = [];
+    let beatRings = [];               // ondes de choc dessinées sur le canvas
+    let lastBeatIndex = null;
+    let barFlash = 0;
+    let beatDomActive = false;
+
+    // Temps de lecture lissé (l'API YouTube ne met à jour getCurrentTime que par à-coups)
+    function getMusicTime(nowMs) {
+      if (!ytReady || !musicPlaying || !ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return null;
+      const t = ytPlayer.getCurrentTime();
+      if (typeof t !== 'number' || !isFinite(t)) return null;
+      const now = nowMs / 1000;
+      if (!beatClock.init || Math.abs((t - now) - beatClock.drift) > 0.6) {
+        beatClock.drift = t - now;
+        beatClock.init = true;
+        beatClock.lastT = t;
+      } else if (t !== beatClock.lastT) {
+        beatClock.drift += 0.25 * ((t - now) - beatClock.drift);
+        beatClock.lastT = t;
+      }
+      return now + beatClock.drift;
+    }
+
+    function getBeatSync(id) {
+      return gameState.beatSync[id] || { bpm: DEFAULT_BPM, offset: 0 };
+    }
+
+    // { active, pulse (1 sur le temps -> 0), phase (0..1 dans le temps), index (n° du temps) }
+    function getBeatState() {
+      const s = { active: false, pulse: 0, phase: 0, index: 0 };
+      if (!gameState.musicFx || !musicPlaying) return s;
+      const t = getMusicTime(performance.now());
+      if (t === null) return s;
+      const sync = getBeatSync(currentTrackId || gameState.musicId);
+      const x = (t - sync.offset) / (60 / sync.bpm);
+      s.index = Math.floor(x);
+      s.phase = x - s.index;
+      s.pulse = Math.pow(1 - s.phase, 3);
+      s.active = true;
+      return s;
+    }
+
+    // Bouton "Caler le rythme" : 4 taps ou plus = BPM + temps ; un tap isolé = recale seulement le temps
+    function tapBeat() {
+      const btn = document.getElementById('btnTap');
+      if (!musicPlaying || !currentTrackId) {
+        btn.innerText = '▶ Lance une phonk';
+        setTimeout(() => { btn.innerText = '🥁 Caler le rythme'; }, 1500);
+        return;
+      }
+      const nowMs = performance.now();
+      if (tapTimes.length && nowMs - tapTimes[tapTimes.length - 1] > 2000) tapTimes = [];
+      tapTimes.push(nowMs);
+      if (tapTimes.length > 10) tapTimes.shift();
+
+      const t = getMusicTime(nowMs);
+      if (t === null) return;
+
+      let bpm = getBeatSync(currentTrackId).bpm;
+      if (tapTimes.length >= 4) {
+        const span = tapTimes[tapTimes.length - 1] - tapTimes[0];
+        bpm = Math.max(60, Math.min(200, Math.round((60000 * (tapTimes.length - 1) / span) * 10) / 10));
+      }
+      const period = 60 / bpm;
+      const offset = (((t - TAP_LATENCY) % period) + period) % period;
+      gameState.beatSync[currentTrackId] = { bpm, offset };
+      lastBeatIndex = null;
+      saveGame();
+      renderMusicUI();
+    }
+
+    function resetBeatSync() {
+      const id = currentTrackId || gameState.musicId;
+      delete gameState.beatSync[id];
+      tapTimes = [];
+      lastBeatIndex = null;
+      saveGame();
+      renderMusicUI();
+    }
+
+    function toggleMusicFx(enabled) {
+      gameState.musicFx = enabled;
+      saveGame();
+      if (!enabled) applyBeatToDom({ active: false, pulse: 0, phase: 0, index: 0 });
+    }
+
+    // Anneau autour du Jules + petit "punch" sur l'emoji + les têtes du pote en fond
+    function applyBeatToDom(beat) {
+      const faceL = document.getElementById('buddyFaceLeft');
+      const faceR = document.getElementById('buddyFaceRight');
+
+      if (!beat.active && !beatDomActive) return;
+      const ring = document.getElementById('beatRing');
+      const emoji = document.getElementById('equippedEmoji');
+      if (beat.active) {
+        ring.style.opacity = (0.75 * Math.pow(1 - beat.phase, 1.5)).toFixed(3);
+        ring.style.transform = `scale(${(1 + 0.5 * beat.phase).toFixed(3)})`;
+        emoji.style.scale = (1 + 0.1 * beat.pulse).toFixed(3);
+
+        // Faces "bop" on every beat, alternating their tilt direction each time
+        // (classic phonk-edit head-bounce feel) and flash brighter on the down-beat.
+        const isBar = (((beat.index % 4) + 4) % 4) === 0;
+        const dir = (beat.index % 2 === 0) ? 1 : -1;
+        const scale = 1 + (isBar ? 0.28 : 0.16) * beat.pulse;
+        const rot = dir * 9 * beat.pulse;
+        const lift = -10 * beat.pulse;
+        if (faceL) {
+          faceL.style.transform = `translateY(calc(-50% + ${lift.toFixed(2)}px)) scale(${scale.toFixed(3)}) rotate(${(-rot).toFixed(2)}deg)`;
+          faceL.style.opacity = (0.6 + 0.35 * beat.pulse).toFixed(3);
+        }
+        if (faceR) {
+          faceR.style.transform = `translateY(calc(-50% + ${lift.toFixed(2)}px)) scale(${scale.toFixed(3)}) rotate(${rot.toFixed(2)}deg)`;
+          faceR.style.opacity = (0.6 + 0.35 * beat.pulse).toFixed(3);
+        }
+        beatDomActive = true;
+      } else {
+        ring.style.opacity = '0';
+        ring.style.transform = '';
+        emoji.style.scale = '';
+        if (faceL) { faceL.style.transform = 'translateY(-50%)'; faceL.style.opacity = '0.6'; }
+        if (faceR) { faceR.style.transform = 'translateY(-50%)'; faceR.style.opacity = '0.6'; }
+        beatDomActive = false;
+      }
+    }
+
+    function refreshMusic() {
+      renderMusicUI();
+      renderInventoryGrid();
+    }
+
+    function buildMusicErrorHtml() {
+      const code = musicError.code;
+      const j = musicError.id ? getJules(musicError.id) : null;
+      const link = j && j.phonk
+        ? ` <a href="https://www.youtube.com/watch?v=${j.phonk.yt}" target="_blank" rel="noopener" class="underline text-indigo-300 hover:text-white">Ouvrir sur YouTube</a>`
+        : '';
+
+      if (code === 'silent') {
+        return "La lecture n'a pas démarré. Clique sur ▶ ; si rien ne se passe, écoute-la directement sur YouTube." + link;
+      }
+      if (code === 'api') {
+        return 'Impossible de charger le lecteur YouTube (connexion coupée ou bloqueur de pub ?).';
+      }
+      if (code === 153 || code === 152 || code === 150 || code === 101) {
+        if (location.protocol === 'file:') {
+          return 'YouTube refuse la lecture quand le jeu est ouvert directement depuis un fichier. Lance-le via un serveur (http://localhost, GitHub Pages, Netlify…).' + link;
+        }
+        return "Le propriétaire de cette vidéo n'autorise pas la lecture dans un site externe." + link;
+      }
+      if (code === 100) {
+        return 'Vidéo introuvable ou privée.' + link;
+      }
+      return `Erreur de lecture (code ${code}).` + link;
+    }
+
+    function renderMusicUI() {
+      const panel = document.getElementById('phonkPanel');
+      if (!panel) return;
+
+      const cur = getJules(gameState.musicId);
+      const track = cur && cur.phonk;
+      const color = cur ? cur.color : '#6366f1';
+
+      // Accent color follows the Jules of the selected phonk
+      panel.style.borderColor = color + '80';
+      document.getElementById('phonkEq').style.color = color;
+      document.getElementById('phonkEq').classList.toggle('playing', musicPlaying);
+
+      document.getElementById('phonkHeaderTitle').innerText = track ? `${track.title} — ${track.artist}` : 'Choisis une phonk';
+      document.getElementById('phonkJules').innerText = cur ? `${cur.emoji} ${cur.name}` : '';
+      const titleEl = document.getElementById('phonkTitle');
+      titleEl.innerText = track ? track.title : '';
+      titleEl.style.color = color;
+      document.getElementById('phonkArtist').innerText = track ? track.artist : '';
+
+      document.getElementById('phonkPlayIcon').className = 'fas ' + (musicPlaying ? 'fa-pause' : 'fa-play') + ' text-xs';
+
+      // Collapsed / expanded
+      const open = gameState.musicPanelOpen;
+      document.getElementById('phonkBody').classList.toggle('collapsed', !open);
+      document.getElementById('phonkChevron').className = 'fas ' + (open ? 'fa-chevron-down' : 'fa-chevron-up') + ' text-xs';
+
+      // Header music button lights up while playing
+      document.getElementById('btnMusicToggle').style.color = musicPlaying ? '#e879f9' : '';
+
+      // Track picker: rebuilt only when something changed (keeps an open dropdown alive)
+      const sig = JULES_DATABASE.map(j => (isTrackUnlocked(j.id) ? '1' : '0')).join('') + '|' + gameState.musicId;
+      if (sig !== lastSelectSig) {
+        lastSelectSig = sig;
+        const sel = document.getElementById('phonkSelect');
+        sel.innerHTML = '';
+        JULES_DATABASE.forEach(j => {
+          if (!j.phonk) return;
+          const opt = document.createElement('option');
+          opt.value = j.id;
+          if (isTrackUnlocked(j.id)) {
+            opt.textContent = `${j.emoji} ${j.phonk.title} — ${j.phonk.artist}`;
+          } else {
+            opt.textContent = `🔒 ??? (Jules 1 sur ${j.odds.toLocaleString('fr-FR')})`;
+            opt.disabled = true;
+          }
+          sel.appendChild(opt);
+        });
+        sel.value = gameState.musicId;
+      }
+
+      // Loop / follow / volume
+      document.getElementById('btnPhonkLoop').innerText = gameState.musicLoop === 'all' ? '🔁 Enchaîner' : '🔂 Boucle';
+      document.getElementById('phonkFollow').checked = gameState.musicFollow;
+      document.getElementById('phonkFx').checked = gameState.musicFx;
+      const syncNow = gameState.beatSync[currentTrackId || gameState.musicId];
+      document.getElementById('bpmLabel').innerText = syncNow ? `${syncNow.bpm} BPM ✓` : `~${DEFAULT_BPM} BPM`;
+      document.getElementById('phonkVolume').value = gameState.musicVolume;
+      document.getElementById('phonkVolumeLabel').innerText = gameState.musicVolume;
+
+      document.getElementById('phonkFileWarn').classList.toggle('hidden', location.protocol !== 'file:');
+
+      // Error message
+      const errBox = document.getElementById('phonkError');
+      if (musicError) {
+        errBox.innerHTML = buildMusicErrorHtml();
+        errBox.classList.remove('hidden');
+      } else {
+        errBox.classList.add('hidden');
+      }
+
+      // Reveal screen button
+      const rp = document.getElementById('revealPhonk');
+      const rb = document.getElementById('revealPhonkBtn');
+      if (rp && rb && rp.dataset.julesId) {
+        const active = rp.dataset.julesId === gameState.musicId && musicPlaying;
+        rb.innerHTML = active
+          ? '<i class="fas fa-music mr-1"></i> En lecture'
+          : '<i class="fas fa-play mr-1"></i> Mettre en fond';
+      }
+    }
+
+    // Modal helpers
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.remove('hidden');
+      setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.add('opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    // --- Dynamic Canvas Background Particle System ---
+    let targetAuraColor = { r: 99, g: 102, b: 241 };
+
+    function hexToRgb(hex) {
+      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 99, g: 102, b: 241 };
+    }
+
+    function setCanvasAuraColor(hex) {
+      targetAuraColor = hexToRgb(hex);
+    }
+
+    function initCanvas() {
+      canvas = document.getElementById('auraCanvas');
+      ctx = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // Create initial particles
+      particles = [];
+      for (let i = 0; i < 60; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 4 + 1,
+          speedY: -Math.random() * 1.5 - 0.5,
+          speedX: (Math.random() - 0.5) * 0.8,
+          alpha: Math.random() * 0.6 + 0.2
+        });
+      }
+
+      animateCanvas();
+    }
+
+    function animateCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Rhythm of the phonk (inactive when no music / effects disabled)
+      const beat = getBeatState();
+      const boost = beat.active ? beat.pulse : 0;
+      applyBeatToDom(beat);
+
+      const rgb = `${targetAuraColor.r}, ${targetAuraColor.g}, ${targetAuraColor.b}`;
+
+      // Draw subtle background aura radial glow (swells on every beat)
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const gradient = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, canvas.width * (0.6 + 0.08 * boost));
+      
+      gradient.addColorStop(0, `rgba(${rgb}, ${0.15 + 0.22 * boost})`);
+      gradient.addColorStop(1, 'rgba(7, 9, 19, 0)');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Shockwaves spawned on each beat, starting from the equipped Jules
+      if (beat.active) {
+        if (beat.index !== lastBeatIndex) {
+          const isBar = (((beat.index % 4) + 4) % 4) === 0;
+          if (lastBeatIndex !== null) {
+            const box = document.getElementById('equippedAvatarCircle').getBoundingClientRect();
+            beatRings.push({ x: box.left + box.width / 2, y: box.top + box.height / 2, r: 70, a: isBar ? 0.6 : 0.32, big: isBar });
+            if (beatRings.length > 8) beatRings.shift();
+            if (isBar) barFlash = 1;
+          }
+          lastBeatIndex = beat.index;
+        }
+      } else {
+        lastBeatIndex = null;
+      }
+
+      beatRings = beatRings.filter(ring => ring.a > 0.02);
+      beatRings.forEach(ring => {
+        ring.r += ring.big ? 9 : 6;
+        ring.a *= 0.95;
+        ctx.beginPath();
+        ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${rgb}, ${ring.a})`;
+        ctx.lineWidth = ring.big ? 4 : 2;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+      });
+
+      // Soft colour flash on the first beat of each bar
+      if (barFlash > 0.02) {
+        ctx.fillStyle = `rgba(${rgb}, ${0.09 * barFlash})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        barFlash *= 0.9;
+      }
+
+      // Draw particles (faster and bigger on the beat)
+      particles.forEach(p => {
+        p.y += p.speedY * (1 + 2.2 * boost);
+        p.x += p.speedX;
+
+        if (p.y < -10) {
+          p.y = canvas.height + 10;
+          p.x = Math.random() * canvas.width;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * (1 + 0.5 * boost), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${rgb}, ${p.alpha})`;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = `rgb(${rgb})`;
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animateCanvas);
+    }
+
+    // --- Passive Spins income: every 10s you earn Spins based on the equipped Jules ---
+    const SPIN_TICK_MS = 10000;
+    let nextSpinTickAt = Date.now() + SPIN_TICK_MS;
+
+    function passiveSpinsTick() {
+      const gain = getSpinsPerRoll();
+      gameState.spins += gain;
+      nextSpinTickAt = Date.now() + SPIN_TICK_MS;
+      saveGame();
+      updateUI();
+
+      // Little pulse on the counters so the gain is felt, not just read
+      ['statSpins', 'shopSpinsBalance', 'equipPanelSpinsGain'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add('text-emerald-300');
+        setTimeout(() => el.classList.remove('text-emerald-300'), 500);
+      });
+    }
+
+    function updateSpinCountdown() {
+      const remain = Math.max(0, Math.ceil((nextSpinTickAt - Date.now()) / 1000));
+      document.querySelectorAll('.spinCountdown').forEach(el => { el.textContent = remain + 's'; });
+    }
+
+    // --- Window Onload Initialization ---
+    window.onload = function() {
+      initCanvas();
+      loadGame();
+      setInterval(passiveSpinsTick, SPIN_TICK_MS);
+      setInterval(updateSpinCountdown, 250);
+      updateSpinCountdown();
+    };
+  </script>
+</body>
+</html>
